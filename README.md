@@ -33,12 +33,9 @@ This works well for pulling raw media out of bundles regardless of Unity version
 
 ## How to build & run
 
-1. Open the project root in **Android Studio (Koala or newer)**.
-2. Android Studio will offer to generate the Gradle wrapper jar automatically on first sync (the binary `gradle-wrapper.jar` isn't checked into this generated project — only the wrapper *scripts* and `gradle-wrapper.properties`, which pin Gradle 8.7). If you're building from the command line instead, run once:
-   ```bash
-   gradle wrapper --gradle-version 8.7
-   ```
-3. Sync Gradle, then Run on a device/emulator running API 26+.
+1. Open the project root in **Android Studio (Koala or newer)** — the Gradle wrapper (including `gradle-wrapper.jar`, pinned to Gradle 8.7) is included, so it'll sync without any extra setup.
+2. Alternatively from the command line: `./gradlew assembleDebug` (macOS/Linux) or `gradlew.bat assembleDebug` (Windows).
+3. Run on a device/emulator running API 26+.
 4. From the app: **Select Game Folder** → **Select Destination** → **Scan for Media** → **Extract**.
 
 Minimum SDK 26, target/compile SDK 35, Kotlin 1.9.24, AGP 8.5.2.
@@ -76,6 +73,5 @@ keytool -genkeypair -v -keystore release.jks -keyalg RSA -keysize 2048 \
 - **Unity extraction is heuristic (signature-carving), not full type-tree deserialization.** Original in-engine asset names for Unity textures/clips are not recovered; files are numbered per source bundle. Extremely large or already-compressed-elsewhere bundles are capped at 512MB for in-memory decompression as a safety guard — bundles bigger than that are skipped rather than risking an OOM.
 - **RPG Maker VX Ace (`.rgss3a`) archive extraction** has its container-format parser implemented but isn't yet wired into the main scan/extract pipeline end-to-end — MV/MZ is the fully wired path.
 - **No native (JNI/C++) code** is included; all hot paths (RPGM XOR streaming, Unity block decompression, media carving) are implemented in Kotlin using chunked I/O and the `lz4-java`/`xz` Java libraries. This keeps the codebase portable and easy to build in CI without an NDK toolchain, at some performance cost versus hand-tuned native code on very large batches.
-- **The Gradle wrapper JAR is not included** (it's a binary file) — see build instructions above for the one-time step to generate it.
 - Video thumbnail generation and image thumbnails in the scan list are wired for Coil but not exhaustively tested against every codec/container combination that might appear in the wild.
 - This tool is intended for extracting assets from games you own, for backup, modding, translation, or archival purposes. Respect the license terms of any game you use it with.
