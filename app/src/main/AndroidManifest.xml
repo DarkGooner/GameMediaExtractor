@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
@@ -32,12 +33,24 @@
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
+        <!--
+          GameMediaExtractorApp implements androidx.work.Configuration.Provider to supply the
+          HiltWorkerFactory (on-demand WorkManager initialization). When doing this, the default
+          WorkManagerInitializer entry that androidx.work merges into the manifest via
+          androidx.startup.InitializationProvider must be explicitly removed, or WorkManager
+          ends up initialized twice (once automatically, once on-demand). This is the official
+          pattern from the WorkManager docs for on-demand initialization.
+        -->
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
             android:exported="false"
-            tools:node="merge"
-            xmlns:tools="http://schemas.android.com/tools" />
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
 
     </application>
 </manifest>
