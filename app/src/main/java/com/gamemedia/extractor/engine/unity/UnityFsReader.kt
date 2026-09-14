@@ -97,12 +97,17 @@ class UnityFsReader {
             when (compressionType) {
                 0 -> input // none
                 1 -> { // LZMA
-                    LZMAInputStream(ByteArrayInputStream(input), input.size.toLong()).use { it.readBytes() }
+                    // -1 disables the xz-java memory limit check. This constructor expects
+                    // the standard legacy .lzma header (5-byte props+dict size, 8-byte
+                    // uncompressed size) to precede the stream; most real-world UnityFS
+                    // bundles use LZ4 rather than LZMA per-block, so this path is a
+                    // best-effort fallback rather than the primary code path.
+                    LZMAInputStream(ByteArrayInputStream(input), -1).use { it.readBytes() }
                 }
                 2, 3 -> { // LZ4 / LZ4HC
                     val decompressor = LZ4Factory.fastestInstance().safeDecompressor()
                     val out = ByteArray(uncompressedSize)
-                    decompressor.decompress(input, 0, out, 0, uncompressedSize)
+                    decompressor.decompress(input, 0, input.size, out, 0, uncompressedSize)
                     out
                 }
                 else -> null
